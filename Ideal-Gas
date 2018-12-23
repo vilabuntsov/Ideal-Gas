@@ -1,0 +1,223 @@
+import tkinter as tki
+import numpy as np
+import matplotlib.pyplot as plt
+import math 
+import matplotlib.animation as animation
+import matplotlib.mlab as mlab
+def center(ball):
+        return (canv.coords(ball)[0] + canv.coords(ball)[2]) / 2, \
+                (canv.coords(ball)[1] + canv.coords(ball)[3]) / 2
+
+def distance(ball1, ball2): # расстояние на которое сиплись
+    return 2 * (rad(ball1)) - (distance_between_centers(ball1, ball2))
+    
+def rad(ball):
+    return abs(canv.coords(ball)[0] - canv.coords(ball)[2]) / 2
+
+def collision_wall(ball, vx, vy, t, gran): #gran = 100 - up, 380 - down, 490 - right, 250 - left
+    if gran == 100:
+        dt = abs(center(ball)[1] - (gran + rad(ball))) / abs(vy)
+        dx, dy = vx * t, (abs((vy * dt)) - abs(vy * (t - dt))) 
+    if gran == 380:
+        dt = abs(center(ball)[1] - (gran - rad(ball))) / abs(vy)
+        dx, dy = vx * t, (abs((vy * dt)) - abs(vy * (t - dt)))
+    if gran == 490:
+        dt = abs(center(ball)[0] - (gran - rad(ball))) / abs(vx)
+        dx, dy = (abs((vx * dt)) - abs(vx * (t - dt))), vy * dt
+    if gran == 250:
+        dt = abs(center(ball)[0] - (gran + rad(ball))) / abs(vx)
+        dx, dy = (abs((vx * dt)) - abs(vx * (t - dt))), vy * dt
+    return dx, dy
+
+def which_wall(ball, down, up, right, left, upH, downH, vx, vy, dt, hole):
+    temp = 44
+    if ((center(ball)[1] + vy * dt) < (up + rad(ball))) and \
+       ((center(ball)[0] + vx * dt) >= (left + rad(ball))) and \
+        ((center(ball)[0] + vx * dt) <= (right - rad(ball))):
+        temp = 0
+    if ((center(ball)[1] + vy * dt) > (down - rad(ball))) and \
+       ((center(ball)[0] + vx * dt) >= (left + rad(ball))) and \
+        ((center(ball)[0] + vx * dt) <= (right - rad(ball))):
+        temp = 1
+    if ((center(ball)[0] + vx * dt) > (right - rad(ball))) and \
+       ((center(ball)[1] + vy * dt) >= (up + rad(ball))) and \
+        ((center(ball)[1] + vy * dt) <= (down - rad(ball))):
+        temp = 2
+    if hole == 0:
+        if ((center(ball)[0] + vx * dt) < (left + rad(ball))) and \
+       ((center(ball)[0] + vx * dt) > (left - 10 + rad(ball))) and \
+        ((center(ball)[1] + vy * dt) >= (up + rad(ball))) and \
+        ((center(ball)[1] + vy * dt) <= (down - rad(ball))):
+            temp = 3
+    if hole == 1:
+        if ((center(ball)[0] + vx * dt) < (left + rad(ball))) and \
+       ((center(ball)[0] + vx * dt) > (left - 10 + rad(ball))) and \
+        ((center(ball)[1] + vy * dt) >= (up + rad(ball))) and \
+        ((center(ball)[1] + vy * dt) <= (downH - rad(ball))):
+            temp = 3
+        if ((center(ball)[0] + vx * dt) < (left + rad(ball))) and \
+       ((center(ball)[0] + vx * dt) > (left - 10 + rad(ball))) and \
+        ((center(ball)[1] + vy * dt) >= (upH + rad(ball))) and \
+        ((center(ball)[1] + vy * dt) <= (down - rad(ball))):
+            temp = 3
+    return temp
+    
+def distance_between_centers(ball1, ball2):
+    return math.sqrt((center(ball1)[0] - center(ball2)[0])**2 + \
+                     (center(ball1)[1] - center(ball2)[1])**2) 
+
+def distance(ball1, ball2):
+    return 2 * (rad(ball1)) - (distance_between_centers(ball1, ball2))
+
+def collision_time(ball1, ball2, vx1, vy1, vx2, vy2):
+    return distance(ball1, ball2) / math.sqrt((vx1 - vx2)**2 + (vy1 - vy2)**2)
+var = 0
+hole = 0
+UP = 100
+DOWN = 380
+RIGHT = 490
+LEFT = 250
+UP_HOLE = 200
+DOWN_HOLE = 150
+ww = []
+
+
+def func1(event):
+    global V0
+    V0 = v0.get()
+    
+def func2(event):
+    root.destroy()
+    
+def func11(event):
+    global var
+    var = 1
+    
+def func22(event):
+    global var
+    var = 0
+    x = ww
+    print(ww)
+    num_bins = npart
+    n, bins, patches = plt.hist(x, num_bins, facecolor='blue', alpha=0.5)
+
+    plt.show()
+    
+def func33(event):
+    global hole
+    hole = 1
+    
+def func44(event):
+    global hole
+    hole = 0
+    
+root = tki.Tk()
+root.title("Идеальный газ")
+root.geometry("600x300")
+lab = tki.Label(root, text='Введите начальную скорость', font='Areal 20')
+but1 = tki.Button(root, text='Ввести', font='Areal 20')
+but2 = tki.Button(root, text='Дальше', font='Areal 20')
+but1.bind('<Button-1>', func1)
+but2.bind('<Button-1>', func2)
+v0 = tki.Entry(root, width=30, bd=3)
+
+lab.pack()
+v0.pack()
+but1.pack()
+but2.pack()
+root.mainloop()
+
+root = tki.Tk()
+root.title("Идеальный газ")
+
+canv = tki.Canvas(root, width=500,height=500,bg="lightblue",) 
+canv.create_line(499,5,499,499,width=1)
+canv.create_line(499,5,5,5,width=1)  
+canv.create_line(5,5,5,499,width=1)
+canv.create_line(5,499,499,499,width=1)
+
+canv.create_line(RIGHT,UP,RIGHT,DOWN,width=1)
+canv.create_line(RIGHT,UP,LEFT,UP,width=1)
+canv.create_line(RIGHT,DOWN,LEFT,DOWN,width=1)
+canv.create_line(LEFT,DOWN,LEFT,UP_HOLE,width=1)
+canv.create_line(LEFT,UP,LEFT,DOWN_HOLE,width=1)
+
+but11 = tki.Button(root, text='Старт', font='Areal 10')
+but22 = tki.Button(root, text='Стоп ', font='Areal 10')
+but33 = tki.Button(root, text='Включить дырку', font='Areal 10')
+but44 = tki.Button(root, text='Выключить дырку', font='Areal 10')
+
+but11.bind('<Button-1>', func11)
+but22.bind('<Button-1>', func22)
+but33.bind('<Button-1>', func33)
+but44.bind('<Button-1>', func44)
+
+but11.pack()
+but22.pack()
+but33.pack()
+but44.pack()
+canv.pack()
+
+npart = 10# кол-во частиц
+dt = 0.01
+
+x = np.random.uniform(300, 440, npart)
+y = np.random.uniform(103, 300, npart)
+v_phi = np.random.uniform(-np.pi, np.pi, npart)
+v_x = float(V0) * np.cos(v_phi)
+v_y = float(V0) * np.sin(v_phi)
+
+All_ball = []
+for i in range(len(x)):# temp - peremennaya
+    ball_temp = canv.create_oval(x[i], y[i], x[i]+20, y[i]+20, fill="red")
+    All_ball.append(ball_temp)
+
+    
+def motion():
+    if var == 1:
+        w = []
+        for i in range(len(x)):
+            temp = which_wall(All_ball[i], DOWN, UP, RIGHT, LEFT, UP_HOLE, DOWN_HOLE, v_x[i], v_y[i], dt, hole)
+            if temp == 0:
+                newx, newy = collision_wall(All_ball[i], v_x[i], v_y[i], dt, UP)
+                canv.move(All_ball[i], newx, newy)
+                v_y[i]= -1 * v_y[i]
+            if temp == 1:
+                newx, newy = collision_wall(All_ball[i], v_x[i], v_y[i], dt, DOWN)
+                canv.move(All_ball[i], newx, newy)
+                v_y[i]= -1 * v_y[i]
+            if temp == 2:
+                newx, newy = collision_wall(All_ball[i], v_x[i], v_y[i], dt, RIGHT)
+                canv.move(All_ball[i], newx, newy)
+                v_x[i]= -1 * v_x[i]
+            if temp == 3:
+                newx, newy = collision_wall(All_ball[i], v_x[i], v_y[i], dt, LEFT)
+                canv.move(All_ball[i], newx, newy)
+                v_x[i]= -1 * v_x[i]
+            else:
+                canv.move(All_ball[i],v_x[i]*dt, v_y[i]*dt)
+            for j in range(len(x)):
+                if(All_ball[i] != All_ball[j]):
+                    if distance_between_centers(All_ball[i], All_ball[j]) < 2 * rad(All_ball[i]):
+                        t = collision_time(All_ball[i], All_ball[j], v_x[i], v_y[i], v_x[j], v_y[j])
+                        canv.move(All_ball[i],-1 * v_x[i] * t,-1 * v_y[i] * t)
+                        canv.move(All_ball[j],-1 * v_x[j] * t,-1 * v_y[j] * t)
+                        a = v_x[i]
+                        b = v_y[i]
+                        v_x[i]= v_x[j]
+                        v_y[i]= v_y[j]
+                        v_x[j]= a
+                        v_y[j]= b
+                        canv.move(All_ball[i], v_x[i] * dt, v_y[i] * dt)
+                        canv.move(All_ball[j], v_x[j] * dt, v_y[j] * dt)
+        
+            #w.append(round(math.sqrt((v_x[i])**2 + (v_y[i])**2),1))
+       # global ww
+        #ww = w
+     #   fig = plt.figure()
+      #  hist = plt.hist(vv)
+       # plt.show()"""
+    root.after(1, motion)    
+motion()
+root.mainloop()
+
